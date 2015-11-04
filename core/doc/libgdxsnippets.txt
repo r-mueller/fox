@@ -1,0 +1,47 @@
+//		ModelBuilder mb = new ModelBuilder();
+//		mb.begin();
+//		Node n = mb.node();
+//		MeshBuilder meshb = new MeshBuilder();
+//		meshb.begin(VertexAttributes.Usage.Normal
+//				| VertexAttributes.Usage.Position);
+//		MeshPart face = meshb.part("top_face", GL20.GL_TRIANGLES);
+//		meshb.rect(new VertexInfo().setPos(0, 0, 0).setNor(0, 0, 1),
+//				new VertexInfo().setPos(3, 0, 0).setNor(0, 0, 1),
+//				new VertexInfo().setPos(3, 3, 0).setNor(0, 0, 1),
+//				new VertexInfo().setPos(0, 3, 0).setNor(0, 0, 1));
+//		mb.part(face, new Material(ColorAttribute.createDiffuse(Color.RED)));
+//		face = meshb.part("bottom_face", GL20.GL_TRIANGLES);
+//		meshb.rect(new VertexInfo().setPos(0, 0, 0).setNor(0, 0, 1),
+//				new VertexInfo().setPos(3, 0, 0).setNor(0, 0, 1),
+//				new VertexInfo().setPos(3, 3, 0).setNor(0, 0, 1),
+//				new VertexInfo().setPos(0, 3, 0).setNor(0, 0, 1));
+//		mb.part(face, new Material(ColorAttribute.createDiffuse(Color.BLUE)));
+//		face = meshb.part("left_face", GL20.GL_TRIANGLES);
+//		meshb.rect(new VertexInfo().setPos(0, 0, 0).setNor(0, 0, 1),
+//				new VertexInfo().setPos(3, 0, 0).setNor(0, 0, 1),
+//				new VertexInfo().setPos(3, 3, 0).setNor(0, 0, 1),
+//				new VertexInfo().setPos(0, 3, 0).setNor(0, 0, 1));
+//		mb.part(face, new Material(ColorAttribute.createDiffuse(Color.GREEN)));
+//		face = meshb.part("right_face", GL20.GL_TRIANGLES);
+//		meshb.rect(new VertexInfo().setPos(0, 0, 0).setNor(0, 0, 1),
+//				new VertexInfo().setPos(3, 0, 0).setNor(0, 0, 1),
+//				new VertexInfo().setPos(3, 3, 0).setNor(0, 0, 1),
+//				new VertexInfo().setPos(0, 3, 0).setNor(0, 0, 1));
+//		mb.part(face, new Material(ColorAttribute.createDiffuse(Color.YELLOW)));
+//		face = meshb.part("front_face", GL20.GL_TRIANGLES);
+//		meshb.rect(new VertexInfo().setPos(0, 0, 0).setNor(0, 0, 1),
+//				new VertexInfo().setPos(3, 0, 0).setNor(0, 0, 1),
+//				new VertexInfo().setPos(3, 3, 0).setNor(0, 0, 1),
+//				new VertexInfo().setPos(0, 3, 0).setNor(0, 0, 1));
+//		mb.part(face, new Material(ColorAttribute.createDiffuse(Color.WHITE)));
+//		face = meshb.part("back_face", GL20.GL_TRIANGLES);
+//		meshb.rect(new VertexInfo().setPos(0, 0, 0).setNor(0, 0, 1),
+//				new VertexInfo().setPos(3, 0, 0).setNor(0, 0, 1),
+//				new VertexInfo().setPos(3, 3, 0).setNor(0, 0, 1),
+//				new VertexInfo().setPos(0, 3, 0).setNor(0, 0, 1));
+//		mb.part(face, new Material(ColorAttribute.createDiffuse(Color.BROWN)));
+//		
+//		
+//		
+//		Mesh m = meshb.end();
+//		this.cubesModel = mb.end();

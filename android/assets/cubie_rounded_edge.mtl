@@ -1,0 +1,12 @@
+# Blender MTL File: 'cubie_black_border_texture.blend'
+# Material Count: 1
+
+newmtl cubiematerial
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.640000 0.640000 0.640000
+Ks 0.500000 0.500000 0.500000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd cubietexture_black_border.png
