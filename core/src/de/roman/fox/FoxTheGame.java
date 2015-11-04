@@ -73,8 +73,6 @@ public class FoxTheGame extends ApplicationAdapter {
 	private Button addButton;
 	private Button removeButton;
 	private Button shuffleButton;
-	private Button lockButton;
-
 	private Sound rubixCubeTurn;
 
 	@Override
@@ -87,11 +85,9 @@ public class FoxTheGame extends ApplicationAdapter {
 		this.assets.load("cubie_rounded_edge.g3db", Model.class);
 		this.assets.finishLoading();
 
-		this.rubixCubeTurn = Gdx.audio.newSound(Gdx.files
-				.internal("rubixturn.wav"));
+		this.rubixCubeTurn = Gdx.audio.newSound(Gdx.files.internal("rubixturn.wav"));
 
-		this.cubesModel = this.assets.get("cubie_rounded_edge.g3db",
-				Model.class);
+		this.cubesModel = this.assets.get("cubie_rounded_edge.g3db", Model.class);
 		if (!this.readPersistedState()) {
 			this.createRubiksCube(this.dimLength);
 		}
@@ -110,8 +106,7 @@ public class FoxTheGame extends ApplicationAdapter {
 		if (!this.readPersistedState()) {
 			this.createRubiksCube(this.dimLength);
 		}
-		this.rubixCubeTurn = Gdx.audio.newSound(Gdx.files
-				.internal("rubixturn.wav"));
+		this.rubixCubeTurn = Gdx.audio.newSound(Gdx.files.internal("rubixturn.wav"));
 	}
 
 	private void createUI() {
@@ -120,47 +115,35 @@ public class FoxTheGame extends ApplicationAdapter {
 		Table widgets = new Table();
 		Actor b = this.shuffleButton = this.createShuffleButton();
 		int originY = Gdx.graphics.getHeight() - buttonHeight;
-		b.setPosition(0, originY);
+		b.setPosition(32 + 64 - 20, originY - 64 - 10);
 		widgets.addActor(b);
 		b = this.addButton = this.createAddXyzButton();
-		b.setPosition(0, 0);
+		b.setPosition(64 - 20, 20);
 		widgets.addActor(b);
 		b = this.removeButton = this.createRemoveXyzButton();
-		b.setPosition(75, 0);
-		widgets.addActor(b);
-		b = this.lockButton = this.createLockButton();
-		b.setPosition(Gdx.graphics.getWidth() - 150, 0);
+		b.setPosition(128 - 10, 20);
 		widgets.addActor(b);
 		this.stage.addActor(widgets);
 	}
 
 	private Button createLockButton() {
 		ImageButtonStyle style = new ImageButtonStyle();
-		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(
-				Gdx.files.internal("lock_enabled.png"))));
-		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(
-				Gdx.files.internal("lock_disabled.png"))));
+		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("lock_enabled.png"))));
+		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("lock_disabled.png"))));
 		final ImageButton lockButton = new ImageButton(style);
 		lockButton.setChecked(false);
 		lockButton.addListener(new ClickListener() {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
 				super.clicked(event, x, y);
-				FoxTheGame.this.shuffleButton
-						.setDisabled(!FoxTheGame.this.shuffleButton
-								.isDisabled());
-				FoxTheGame.this.shuffleButton
-						.setTouchable(FoxTheGame.this.shuffleButton
-								.isDisabled() ? Touchable.disabled
-								: Touchable.enabled);
-				FoxTheGame.this.addButton
-						.setDisabled(!FoxTheGame.this.addButton.isDisabled());
-				FoxTheGame.this.addButton.setTouchable(FoxTheGame.this.addButton
-						.isDisabled() ? Touchable.disabled : Touchable.enabled);
-				FoxTheGame.this.removeButton
-						.setDisabled(!FoxTheGame.this.removeButton.isDisabled());
-				FoxTheGame.this.removeButton.setTouchable(FoxTheGame.this.removeButton
-						.isDisabled() ? Touchable.disabled : Touchable.enabled);
+				FoxTheGame.this.shuffleButton.setDisabled(!FoxTheGame.this.shuffleButton.isDisabled());
+				FoxTheGame.this.shuffleButton.setTouchable(FoxTheGame.this.shuffleButton.isDisabled() ? Touchable.disabled
+						: Touchable.enabled);
+				FoxTheGame.this.addButton.setDisabled(!FoxTheGame.this.addButton.isDisabled());
+				FoxTheGame.this.addButton.setTouchable(FoxTheGame.this.addButton.isDisabled() ? Touchable.disabled : Touchable.enabled);
+				FoxTheGame.this.removeButton.setDisabled(!FoxTheGame.this.removeButton.isDisabled());
+				FoxTheGame.this.removeButton.setTouchable(FoxTheGame.this.removeButton.isDisabled() ? Touchable.disabled
+						: Touchable.enabled);
 			}
 		});
 		return lockButton;
@@ -168,10 +151,8 @@ public class FoxTheGame extends ApplicationAdapter {
 
 	private Button createRemoveXyzButton() {
 		ImageButtonStyle style = new ImageButtonStyle();
-		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(
-				Gdx.files.internal("removeone_disabled.png"))));
-		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(
-				Gdx.files.internal("removeone_enabled.png"))));
+		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("remove_disabled_64.png"))));
+		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("remove_enabled_64.png"))));
 		ImageButton removeXyzButton = new ImageButton(style);
 		removeXyzButton.addListener(new ClickListener() {
 			@Override
@@ -187,10 +168,8 @@ public class FoxTheGame extends ApplicationAdapter {
 
 	private Button createAddXyzButton() {
 		ImageButtonStyle style = new ImageButtonStyle();
-		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(
-				Gdx.files.internal("addone_disabled.png"))));
-		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(
-				Gdx.files.internal("addone_enabled.png"))));
+		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("add_disabled_64.png"))));
+		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("add_enabled_64.png"))));
 		ImageButton addXyzButton = new ImageButton(style);
 		addXyzButton.addListener(new ClickListener() {
 			@Override
@@ -206,10 +185,8 @@ public class FoxTheGame extends ApplicationAdapter {
 
 	private Button createShuffleButton() {
 		ImageButtonStyle style = new ImageButtonStyle();
-		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(
-				Gdx.files.internal("scramble_disabled.png"))));
-		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(
-				Gdx.files.internal("scramble_enabled.png"))));
+		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("shuffle_cube_bw_64.png"))));
+		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("shuffle_cube_64.png"))));
 		ImageButton shuffleButton = new ImageButton(style);
 		shuffleButton.addListener(new ClickListener() {
 			@Override
@@ -217,16 +194,12 @@ public class FoxTheGame extends ApplicationAdapter {
 				super.clicked(event, x, y);
 				Gdx.app.log(LOGGER_TAG, "Shuffle or stop shuffle.");
 				FoxTheGame.this.shuffle = !FoxTheGame.this.shuffle;
-		FoxTheGame.this.addButton
-				.setDisabled(!FoxTheGame.this.addButton.isDisabled());
-		FoxTheGame.this.addButton.setTouchable(FoxTheGame.this.addButton
-				.isDisabled() ? Touchable.disabled : Touchable.enabled);
-		FoxTheGame.this.removeButton
-				.setDisabled(!FoxTheGame.this.removeButton.isDisabled());
-		FoxTheGame.this.removeButton.setTouchable(FoxTheGame.this.removeButton
-				.isDisabled() ? Touchable.disabled : Touchable.enabled);
-		FoxTheGame.this.lockButton
-				.setDisabled(!FoxTheGame.this.lockButton.isDisabled());
+				FoxTheGame.this.addButton.setDisabled(!FoxTheGame.this.addButton.isDisabled());
+				FoxTheGame.this.addButton.setTouchable(FoxTheGame.this.addButton.isDisabled() ? Touchable.disabled : Touchable.enabled);
+				FoxTheGame.this.removeButton.setDisabled(!FoxTheGame.this.removeButton.isDisabled());
+				FoxTheGame.this.removeButton.setTouchable(FoxTheGame.this.removeButton.isDisabled() ? Touchable.disabled
+						: Touchable.enabled);
+				// FoxTheGame.this.lockButton.setDisabled(!FoxTheGame.this.lockButton.isDisabled());
 			}
 		});
 		return shuffleButton;
@@ -234,39 +207,39 @@ public class FoxTheGame extends ApplicationAdapter {
 
 	private void createEnvironment() {
 		this.environment = new Environment();
-		this.environment.set(new ColorAttribute(ColorAttribute.AmbientLight,
-				0.0f, 0.6f, 0.0f, 0.5f));
-		this.environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -10f,
-				-10f, -10f));
-		this.environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, 10f,
-				10f, 10f));
-		this.environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -10f,
-				0f, 0f));
-		this.environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, 10f,
-				0f, 0f));
-		this.environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, 0f,
-				-10f, 0f));
-		this.environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, 0f,
-				10f, 0f));
-		this.environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, 0f,
-				0f, -10f));
-		this.environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, 0f,
-				0f, 10f));
+		this.environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.0f, 0.6f, 0.0f, 0.5f));
+		this.environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -10f, -10f, -10f));
+		this.environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, 10f, 10f, 10f));
+		this.environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -10f, 0f, 0f));
+		this.environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, 10f, 0f, 0f));
+		this.environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, 0f, -10f, 0f));
+		this.environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, 0f, 10f, 0f));
+		this.environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, 0f, 0f, -10f));
+		this.environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, 0f, 0f, 10f));
 		this.modelBatch = new ModelBatch();
-		this.camera = new PerspectiveCamera(this.fieldOfView,
-				Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		this.camera.position.set(8f, 8f, 8f);
+		this.camera = new PerspectiveCamera(this.fieldOfView, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		this.camera.position.set(9f, 9f, 9f);
 		this.camera.lookAt(0, 0, 0);
 		this.camera.near = 1f;
 		this.camera.far = 300f;
 		this.camera.update();
-		this.camInputController = new CameraInputController(this.camera);
-		Gdx.input.setInputProcessor(new InputMultiplexer(this.stage,
-				new DoublePickInputListener(this), this.camInputController));
+		this.camInputController = new CameraInputController(this.camera) {
+			@Override
+			public boolean zoom(float amount) {
+				float camDistanceToCenter = Math.round(this.camera.position.len());
+				Gdx.app.log(LOGGER_TAG, "" + camDistanceToCenter);
+				if ((14 <= camDistanceToCenter && amount > 0) || (camDistanceToCenter <= 18 && amount < 0)) {
+					return super.zoom(amount);
+				} else {
+					return false;
+				}
+			}
+		};
+		Gdx.input.setInputProcessor(new InputMultiplexer(this.stage, new DoublePickInputListener(this), this.camInputController));
 	}
 
 	private void createRubiksCube(int size) {
-		if (size < 2 || size > 8) {
+		if (size < 2 || size > 5) {
 			return;
 		}
 		this.cubes.clear();
@@ -275,12 +248,9 @@ public class FoxTheGame extends ApplicationAdapter {
 		for (float x = lower, xs = 0; xs < size; x++, xs++) {
 			for (float y = lower, ys = 0; ys < size; y++, ys++) {
 				for (float z = lower, zs = 0; zs < size; z++, zs++) {
-					if (x == lower || x == upper || y == lower || y == upper
-							|| z == lower || z == upper) {
-						ModelInstance newCube = new ModelInstance(
-								this.cubesModel);
-						newCube.transform.translate(x * this.length, y
-								* this.length, z * this.length);
+					if (x == lower || x == upper || y == lower || y == upper || z == lower || z == upper) {
+						ModelInstance newCube = new ModelInstance(this.cubesModel);
+						newCube.transform.translate(x * this.length, y * this.length, z * this.length);
 						this.cubes.add(newCube);
 					}
 				}
@@ -299,8 +269,7 @@ public class FoxTheGame extends ApplicationAdapter {
 		super.render();
 
 		this.camInputController.update();
-		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(),
-				Gdx.graphics.getHeight());
+		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 		Gdx.gl.glClearColor(0.2f, 0.4f, 0.8f, 1);
 
@@ -312,26 +281,21 @@ public class FoxTheGame extends ApplicationAdapter {
 			for (ModelInstance rotated : this.cubesToRotate) {
 
 				rotation = rotated.transform.getRotation(rotation);
-				rotated.transform.rotate(-rotation.x, -rotation.y, -rotation.z,
-						rotation.getAngle());
+				rotated.transform.rotate(-rotation.x, -rotation.y, -rotation.z, rotation.getAngle());
 
 				translation = rotated.transform.getTranslation(translation);
 
-				rotated.transform.translate(-translation.x, -translation.y,
-						-translation.z);
+				rotated.transform.translate(-translation.x, -translation.y, -translation.z);
 
 				rotated.transform.rotate(this.rotateWorldAxis, degreeSteps);
 
 				rotated.transform.translate(translation);
 
-				rotated.transform.rotate(rotation.x, rotation.y, rotation.z,
-						rotation.getAngle());
-				if (this.rotationsCount == 40
-						&& this.totalDegreesToRotate == this.degreesRotated) {
+				rotated.transform.rotate(rotation.x, rotation.y, rotation.z, rotation.getAngle());
+				if (this.rotationsCount == 40 && this.totalDegreesToRotate == this.degreesRotated) {
 					Gdx.app.log(LOGGER_TAG, "Round translations.");
 					for (int i = 0; i < rotated.transform.val.length; i++) {
-						rotated.transform.val[i] = Math
-								.round(rotated.transform.val[i]);
+						rotated.transform.val[i] = Math.round(rotated.transform.val[i]);
 					}
 					this.rotationsCount = 0;
 				}
@@ -352,20 +316,11 @@ public class FoxTheGame extends ApplicationAdapter {
 	private void randomlyRotate() {
 		double xyorz = Math.random();
 		if (xyorz <= 0.333) {
-			this.rotateAroundX(
-					this.cubes
-							.get((int) (Math.random() * (this.cubes.size() - 1))),
-					90f);
+			this.rotateAroundX(this.cubes.get((int) (Math.random() * (this.cubes.size() - 1))), 90f);
 		} else if (0.333 <= xyorz && xyorz <= 0.666) {
-			this.rotateAroundY(
-					this.cubes
-							.get((int) (Math.random() * (this.cubes.size() - 1))),
-					90f);
+			this.rotateAroundY(this.cubes.get((int) (Math.random() * (this.cubes.size() - 1))), 90f);
 		} else if (0.666 <= xyorz && xyorz <= 0.999) {
-			this.rotateAroundZ(
-					this.cubes
-							.get((int) (Math.random() * (this.cubes.size() - 1))),
-					90f);
+			this.rotateAroundZ(this.cubes.get((int) (Math.random() * (this.cubes.size() - 1))), 90f);
 		}
 	}
 
@@ -395,22 +350,17 @@ public class FoxTheGame extends ApplicationAdapter {
 		this.rotate(touchedInstance, Vector3.Y, degree);
 	}
 
-	public void rotate(ModelInstance touchedInstance, Vector3 rotationVector,
-			float degree) {
-		Gdx.app.log(LOGGER_TAG, "Rotate around " + rotationVector + " degrees "
-				+ degree);
+	public void rotate(ModelInstance touchedInstance, Vector3 rotationVector, float degree) {
+		Gdx.app.log(LOGGER_TAG, "Rotate around " + rotationVector + " degrees " + degree);
 		if (rotationVector.x != 0) {
 			if (this.isRotating) {
 				return;
 			}
 			this.isRotating = true;
 			Gdx.app.log(LOGGER_TAG, "Rotate around worlds X.");
-			float xTranslationOfTouched = touchedInstance.transform
-					.getTranslation(touchedTranslation).x;
+			float xTranslationOfTouched = touchedInstance.transform.getTranslation(touchedTranslation).x;
 			for (ModelInstance cube : this.cubes) {
-				if (Math.round(cube.transform
-						.getTranslation(touchedTranslation).x) == Math
-						.round(xTranslationOfTouched)) {
+				if (Math.round(cube.transform.getTranslation(touchedTranslation).x) == Math.round(xTranslationOfTouched)) {
 					this.cubesToRotate.add(cube);
 				}
 
@@ -426,12 +376,9 @@ public class FoxTheGame extends ApplicationAdapter {
 			}
 			this.isRotating = true;
 			Gdx.app.log(LOGGER_TAG, "Rotate around worlds Y.");
-			float yTranslationOfTouched = touchedInstance.transform
-					.getTranslation(touchedTranslation).y;
+			float yTranslationOfTouched = touchedInstance.transform.getTranslation(touchedTranslation).y;
 			for (ModelInstance cube : this.cubes) {
-				if (Math.round(cube.transform
-						.getTranslation(touchedTranslation).y) == Math
-						.round(yTranslationOfTouched)) {
+				if (Math.round(cube.transform.getTranslation(touchedTranslation).y) == Math.round(yTranslationOfTouched)) {
 					this.cubesToRotate.add(cube);
 				}
 
@@ -447,12 +394,9 @@ public class FoxTheGame extends ApplicationAdapter {
 			}
 			this.isRotating = true;
 			Gdx.app.log(LOGGER_TAG, "Rotate around worlds Z.");
-			float zTranslationOfTouched = touchedInstance.transform
-					.getTranslation(touchedTranslation).z;
+			float zTranslationOfTouched = touchedInstance.transform.getTranslation(touchedTranslation).z;
 			for (ModelInstance cube : this.cubes) {
-				if (Math.round(cube.transform
-						.getTranslation(touchedTranslation).z) == Math
-						.round(zTranslationOfTouched)) {
+				if (Math.round(cube.transform.getTranslation(touchedTranslation).z) == Math.round(zTranslationOfTouched)) {
 					this.cubesToRotate.add(cube);
 				}
 			}
@@ -481,8 +425,7 @@ public class FoxTheGame extends ApplicationAdapter {
 					if (i == 0) {
 						stateAsString = stateAsString + cube.transform.val[i];
 					} else {
-						stateAsString = stateAsString + STATE_TVAL_SEPARATOR
-								+ cube.transform.val[i];
+						stateAsString = stateAsString + STATE_TVAL_SEPARATOR + cube.transform.val[i];
 					}
 				}
 				stateAsString = stateAsString + STATE_MATRIX_SEPARATOR;
@@ -495,20 +438,15 @@ public class FoxTheGame extends ApplicationAdapter {
 		if (Gdx.files.isLocalStorageAvailable()) {
 			Gdx.app.log(LOGGER_TAG, "Reading in persisted state.");
 			FileHandle transformsFile = Gdx.files.local(STATE_FILE);
-			if (transformsFile == null
-					|| !transformsFile.exists()
-					|| this.isNullOrEmpty(stateAsString = transformsFile
-							.readString())) {
+			if (transformsFile == null || !transformsFile.exists() || this.isNullOrEmpty(stateAsString = transformsFile.readString())) {
 				return false;
 			}
 			String[] matrixStates = stateAsString.split(STATE_MATRIX_SEPARATOR);
-			this.createRubiksCube(this.dimLength = this
-					.determineCubeSize(matrixStates.length));
+			this.createRubiksCube(this.dimLength = this.determineCubeSize(matrixStates.length));
 			for (int i = 0; i < matrixStates.length; i++) {
 				String[] tvals = matrixStates[i].split(STATE_TVAL_SEPARATOR);
 				for (int j = 0; j < tvals.length; j++) {
-					this.cubes.get(i).transform.val[j] = Float
-							.valueOf(tvals[j]);
+					this.cubes.get(i).transform.val[j] = Float.valueOf(tvals[j]);
 				}
 			}
 			return true;

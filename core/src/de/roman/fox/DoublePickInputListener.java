@@ -113,52 +113,6 @@ class DoublePickInputListener extends InputAdapter {
 		float len2 = vector.len2();
 		return len2 == (vector.x * vector.x) || len2 == (vector.y * vector.y) || len2 == (vector.z * vector.z);
 	}
-
-	private void calculatePerpendicular(Vector3 perpendicularOut, BoundingBox boundingBox, Vector3 intersection) {
-		float smallestDelta = Float.MAX_VALUE;
-		float currentDelta = Math.abs(Math.abs(boundingBox.min.x) - Math.abs(intersection.x));
-		if (smallestDelta > currentDelta) {
-			smallestDelta = currentDelta;
-			perpendicularOut.x = intersection.x;
-			perpendicularOut.y = 0;
-			perpendicularOut.z = 0;
-		}
-		currentDelta = Math.abs(Math.abs(boundingBox.max.x) - Math.abs(intersection.x));
-		if (smallestDelta > currentDelta) {
-			smallestDelta = currentDelta;
-			perpendicularOut.x = intersection.x;
-			perpendicularOut.y = 0;
-			perpendicularOut.z = 0;
-		}
-		currentDelta = Math.abs(Math.abs(boundingBox.min.y) - Math.abs(intersection.y));
-		if (smallestDelta > currentDelta) {
-			smallestDelta = currentDelta;
-			perpendicularOut.x = 0;
-			perpendicularOut.y = intersection.y;
-			perpendicularOut.z = 0;
-		}
-		currentDelta = Math.abs(Math.abs(boundingBox.max.y) - Math.abs(intersection.y));
-		if (smallestDelta > currentDelta) {
-			smallestDelta = currentDelta;
-			perpendicularOut.x = 0;
-			perpendicularOut.y = intersection.y;
-			perpendicularOut.z = 0;
-		}
-		currentDelta = Math.abs(Math.abs(boundingBox.min.z) - Math.abs(intersection.z));
-		if (smallestDelta > currentDelta) {
-			smallestDelta = currentDelta;
-			perpendicularOut.x = 0;
-			perpendicularOut.y = 0;
-			perpendicularOut.z = intersection.z;
-		}
-		currentDelta = Math.abs(Math.abs(boundingBox.max.z) - Math.abs(intersection.z));
-		if (smallestDelta > currentDelta) {
-			smallestDelta = currentDelta;
-			perpendicularOut.x = 0;
-			perpendicularOut.y = 0;
-			perpendicularOut.z = intersection.z;
-		}
-	}
 	
 	private void calculatePerpendicular(Vector3 perpendicularOut, Vector3 intersection) {
 		float smallestDelta = Float.MAX_VALUE;
