@@ -1,9 +1,10 @@
 package de.roman.fox;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.List;
-
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
@@ -72,8 +73,19 @@ public class FoxTheGame extends ApplicationAdapter {
 
 	private Button addButton;
 	private Button removeButton;
-	private Button shuffleButton;
+	private Button redoButton;
+	private Button undoButton;
 	private Sound rubixCubeTurn;
+
+	private static final int MAX_SIZE = 5;
+	private static final int MIN_SIZE = 2;
+
+	private Deque<Move> undoableMoves = new ArrayDeque<Move>(10);
+	private Deque<Move> redoableMoves = new ArrayDeque<Move>(10);
+	private static final int MOVE_UNDOABLE = 100;
+	private static final int MOVE_REDOABLE = 200;
+	private Vector3 undoRedoVector = new Vector3();
+	private static final int UNDO_REDO_SIZE_LIMIT = 10;
 
 	@Override
 	public void create() {
@@ -89,7 +101,7 @@ public class FoxTheGame extends ApplicationAdapter {
 
 		this.cubesModel = this.assets.get("cubie_rounded_edge.g3db", Model.class);
 		if (!this.readPersistedState()) {
-			this.createRubiksCube(this.dimLength);
+			this.createRubiksCube(this.getDimLength());
 		}
 	}
 
@@ -104,16 +116,17 @@ public class FoxTheGame extends ApplicationAdapter {
 	public void resume() {
 		super.resume();
 		if (!this.readPersistedState()) {
-			this.createRubiksCube(this.dimLength);
+			this.createRubiksCube(this.getDimLength());
 		}
 		this.rubixCubeTurn = Gdx.audio.newSound(Gdx.files.internal("rubixturn.wav"));
+		this.evaluateButtons();
 	}
 
 	private void createUI() {
 		int buttonHeight = 30;
 		this.stage = new Stage(new ScreenViewport());
 		Table widgets = new Table();
-		Actor b = this.shuffleButton = this.createShuffleButton();
+		Actor b = this.createShuffleButton();
 		int originY = Gdx.graphics.getHeight() - buttonHeight;
 		b.setPosition(32 + 64 - 20, originY - 64 - 10);
 		widgets.addActor(b);
@@ -123,44 +136,76 @@ public class FoxTheGame extends ApplicationAdapter {
 		b = this.removeButton = this.createRemoveXyzButton();
 		b.setPosition(128 - 10, 20);
 		widgets.addActor(b);
+		b = undoButton = this.createUndoButton();
+		b.setPosition(Gdx.graphics.getWidth() - 64 - 64 - 20 - 10, 20);
+		widgets.addActor(b);
+		b = redoButton = this.createRedoButton();
+		b.setPosition(Gdx.graphics.getWidth() - 64 - 20, 20);
+		widgets.addActor(b);
 		this.stage.addActor(widgets);
+		setDisabledAndTouchable(undoButton, isUndoButtonDisabled());
+		setDisabledAndTouchable(redoButton, isRedoButtonDisabled());
 	}
 
-	private Button createLockButton() {
+	private Button createUndoButton() {
 		ImageButtonStyle style = new ImageButtonStyle();
-		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("lock_enabled.png"))));
-		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("lock_disabled.png"))));
-		final ImageButton lockButton = new ImageButton(style);
-		lockButton.setChecked(false);
-		lockButton.addListener(new ClickListener() {
+		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("undo_disabled_64.png"))));
+		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("undo_enabled_64.png"))));
+		ImageButton undoButton = new ImageButton(style);
+		undoButton.addListener(new ClickListener() {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
 				super.clicked(event, x, y);
-				FoxTheGame.this.shuffleButton.setDisabled(!FoxTheGame.this.shuffleButton.isDisabled());
-				FoxTheGame.this.shuffleButton.setTouchable(FoxTheGame.this.shuffleButton.isDisabled() ? Touchable.disabled
-						: Touchable.enabled);
-				FoxTheGame.this.addButton.setDisabled(!FoxTheGame.this.addButton.isDisabled());
-				FoxTheGame.this.addButton.setTouchable(FoxTheGame.this.addButton.isDisabled() ? Touchable.disabled : Touchable.enabled);
-				FoxTheGame.this.removeButton.setDisabled(!FoxTheGame.this.removeButton.isDisabled());
-				FoxTheGame.this.removeButton.setTouchable(FoxTheGame.this.removeButton.isDisabled() ? Touchable.disabled
-						: Touchable.enabled);
+				Gdx.app.log(LOGGER_TAG, "Undo last move.");
+				undoLastMove();
 			}
 		});
-		return lockButton;
+		return undoButton;
+	}
+
+	private void undoLastMove() {
+		Move lastMove = undoableMoves.poll();
+		if (lastMove != null) {
+			undoRedoVector.set(lastMove.getRotX(), lastMove.getRotY(), lastMove.getRotZ());
+			rotate(lastMove.getTouchedInstance(), undoRedoVector, -lastMove.getDegree(), MOVE_REDOABLE);
+		}
+	}
+
+	private Button createRedoButton() {
+		ImageButtonStyle style = new ImageButtonStyle();
+		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("redo_disabled_64.png"))));
+		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("redo_enabled_64.png"))));
+		final ImageButton redoButton = new ImageButton(style);
+		redoButton.addListener(new ClickListener() {
+			@Override
+			public void clicked(InputEvent event, float x, float y) {
+				super.clicked(event, x, y);
+				Gdx.app.log(LOGGER_TAG, "Redo last move.");
+				redoLastMove();
+			}
+		});
+		return redoButton;
+	}
+
+	private void redoLastMove() {
+		Move lastMove = redoableMoves.poll();
+		if (lastMove != null) {
+			undoRedoVector.set(lastMove.getRotX(), lastMove.getRotY(), lastMove.getRotZ());
+			rotate(lastMove.getTouchedInstance(), undoRedoVector, -lastMove.getDegree(), MOVE_UNDOABLE);
+		}
 	}
 
 	private Button createRemoveXyzButton() {
 		ImageButtonStyle style = new ImageButtonStyle();
-		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("remove_disabled_64.png"))));
-		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("remove_enabled_64.png"))));
-		ImageButton removeXyzButton = new ImageButton(style);
+		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("remove_disabled_thick_64.png"))));
+		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("remove_enabled_thick_64.png"))));
+		final ImageButton removeXyzButton = new ImageButton(style);
 		removeXyzButton.addListener(new ClickListener() {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
 				super.clicked(event, x, y);
 				Gdx.app.log(LOGGER_TAG, "Decrease dimensions.");
-				FoxTheGame.this.dimLength = FoxTheGame.this.dimLength - 1;
-				FoxTheGame.this.createRubiksCube(FoxTheGame.this.dimLength);
+				setDimLength(getDimLength() - 1);
 			}
 		});
 		return removeXyzButton;
@@ -168,16 +213,15 @@ public class FoxTheGame extends ApplicationAdapter {
 
 	private Button createAddXyzButton() {
 		ImageButtonStyle style = new ImageButtonStyle();
-		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("add_disabled_64.png"))));
-		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("add_enabled_64.png"))));
-		ImageButton addXyzButton = new ImageButton(style);
+		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("add_disabled_thick_64.png"))));
+		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("add_enabled_thick_64.png"))));
+		final ImageButton addXyzButton = new ImageButton(style);
 		addXyzButton.addListener(new ClickListener() {
 			@Override
 			public void clicked(InputEvent event, float x, float y) {
 				super.clicked(event, x, y);
 				Gdx.app.log(LOGGER_TAG, "Increase dimensions.");
-				FoxTheGame.this.dimLength = FoxTheGame.this.dimLength + 1;
-				FoxTheGame.this.createRubiksCube(FoxTheGame.this.dimLength);
+				setDimLength(getDimLength() + 1);
 			}
 		});
 		return addXyzButton;
@@ -193,13 +237,7 @@ public class FoxTheGame extends ApplicationAdapter {
 			public void clicked(InputEvent event, float x, float y) {
 				super.clicked(event, x, y);
 				Gdx.app.log(LOGGER_TAG, "Shuffle or stop shuffle.");
-				FoxTheGame.this.shuffle = !FoxTheGame.this.shuffle;
-				FoxTheGame.this.addButton.setDisabled(!FoxTheGame.this.addButton.isDisabled());
-				FoxTheGame.this.addButton.setTouchable(FoxTheGame.this.addButton.isDisabled() ? Touchable.disabled : Touchable.enabled);
-				FoxTheGame.this.removeButton.setDisabled(!FoxTheGame.this.removeButton.isDisabled());
-				FoxTheGame.this.removeButton.setTouchable(FoxTheGame.this.removeButton.isDisabled() ? Touchable.disabled
-						: Touchable.enabled);
-				// FoxTheGame.this.lockButton.setDisabled(!FoxTheGame.this.lockButton.isDisabled());
+				setShuffle(!isShuffle());
 			}
 		});
 		return shuffleButton;
@@ -239,9 +277,6 @@ public class FoxTheGame extends ApplicationAdapter {
 	}
 
 	private void createRubiksCube(int size) {
-		if (size < 2 || size > 5) {
-			return;
-		}
 		this.cubes.clear();
 		float lower = -(size / 2f) + 0.5f;
 		float upper = -lower;
@@ -256,6 +291,11 @@ public class FoxTheGame extends ApplicationAdapter {
 				}
 			}
 		}
+	}
+
+	private void setDisabledAndTouchable(Button button, boolean disabledAndTouchable) {
+		button.setDisabled(disabledAndTouchable);
+		button.setTouchable(disabledAndTouchable ? Touchable.disabled : Touchable.enabled);
 	}
 
 	@Override
@@ -302,7 +342,7 @@ public class FoxTheGame extends ApplicationAdapter {
 			}
 			if (this.totalDegreesToRotate == this.degreesRotated) {
 				this.cubesToRotate.clear();
-				this.isRotating = false;
+				this.setRotating(false);
 			}
 		}
 		this.modelBatch.begin(this.camera);
@@ -350,13 +390,13 @@ public class FoxTheGame extends ApplicationAdapter {
 		this.rotate(touchedInstance, Vector3.Y, degree);
 	}
 
-	public void rotate(ModelInstance touchedInstance, Vector3 rotationVector, float degree) {
+	protected void rotate(ModelInstance touchedInstance, Vector3 rotationVector, float degree, int moveCode) {
 		Gdx.app.log(LOGGER_TAG, "Rotate around " + rotationVector + " degrees " + degree);
 		if (rotationVector.x != 0) {
 			if (this.isRotating) {
 				return;
 			}
-			this.isRotating = true;
+			this.setRotating(true);
 			Gdx.app.log(LOGGER_TAG, "Rotate around worlds X.");
 			float xTranslationOfTouched = touchedInstance.transform.getTranslation(touchedTranslation).x;
 			for (ModelInstance cube : this.cubes) {
@@ -370,11 +410,12 @@ public class FoxTheGame extends ApplicationAdapter {
 			this.degreeSteps = this.totalDegreesToRotate / 6;
 			this.degreesRotated = 0;
 			this.rotationsCount++;
+			pushUndoRedoMove(touchedInstance, rotationVector, degree, moveCode);
 		} else if (rotationVector.y != 0) {
 			if (this.isRotating) {
 				return;
 			}
-			this.isRotating = true;
+			this.setRotating(true);
 			Gdx.app.log(LOGGER_TAG, "Rotate around worlds Y.");
 			float yTranslationOfTouched = touchedInstance.transform.getTranslation(touchedTranslation).y;
 			for (ModelInstance cube : this.cubes) {
@@ -388,11 +429,12 @@ public class FoxTheGame extends ApplicationAdapter {
 			this.degreeSteps = this.totalDegreesToRotate / 6;
 			this.degreesRotated = 0;
 			this.rotationsCount++;
+			pushUndoRedoMove(touchedInstance, rotationVector, degree, moveCode);
 		} else if (rotationVector.z != 0) {
 			if (this.isRotating) {
 				return;
 			}
-			this.isRotating = true;
+			this.setRotating(true);
 			Gdx.app.log(LOGGER_TAG, "Rotate around worlds Z.");
 			float zTranslationOfTouched = touchedInstance.transform.getTranslation(touchedTranslation).z;
 			for (ModelInstance cube : this.cubes) {
@@ -405,10 +447,50 @@ public class FoxTheGame extends ApplicationAdapter {
 			this.degreeSteps = this.totalDegreesToRotate / 6;
 			this.degreesRotated = 0;
 			this.rotationsCount++;
+			pushUndoRedoMove(touchedInstance, rotationVector, degree, moveCode);
 		}
 		if (this.isRotating) {
 			this.rubixCubeTurn.play();
 		}
+	}
+
+	private void pushUndoRedoMove(ModelInstance touchedInstance, Vector3 rotationVector, float degree, int moveCode) {
+		if (MOVE_UNDOABLE == moveCode) {
+			Move undoableMove = null;
+			if (UNDO_REDO_SIZE_LIMIT == this.undoableMoves.size()) {
+				undoableMove = this.undoableMoves.pollLast();
+				undoableMove.setDegree(degree);
+				undoableMove.setRotX(rotationVector.x);
+				undoableMove.setRotY(rotationVector.y);
+				undoableMove.setRotZ(rotationVector.z);
+				undoableMove.setTouchedInstance(touchedInstance);
+			} else {
+				undoableMove = new Move(touchedInstance, rotationVector.x, rotationVector.y, rotationVector.z, degree);
+			}
+			this.undoableMoves.push(undoableMove);
+		} else if (MOVE_REDOABLE == moveCode) {
+			Move redoableMove = null;
+			if (UNDO_REDO_SIZE_LIMIT == this.redoableMoves.size()) {
+				redoableMove = this.redoableMoves.pollLast();
+				redoableMove.setDegree(degree);
+				redoableMove.setRotX(rotationVector.x);
+				redoableMove.setRotY(rotationVector.y);
+				redoableMove.setRotZ(rotationVector.z);
+				redoableMove.setTouchedInstance(touchedInstance);
+			} else {
+				redoableMove = new Move(touchedInstance, rotationVector.x, rotationVector.y, rotationVector.z, degree);
+			}
+			this.redoableMoves.push(redoableMove);
+		}
+	}
+
+	public void rotate(ModelInstance touchedInstance, Vector3 rotationVector, float degree) {
+		this.rotate(touchedInstance, rotationVector, degree, MOVE_UNDOABLE);
+	}
+
+	private void setRotating(boolean rotating) {
+		this.isRotating = rotating;
+		this.evaluateButtons();
 	}
 
 	public boolean isRotating() {
@@ -442,7 +524,8 @@ public class FoxTheGame extends ApplicationAdapter {
 				return false;
 			}
 			String[] matrixStates = stateAsString.split(STATE_MATRIX_SEPARATOR);
-			this.createRubiksCube(this.dimLength = this.determineCubeSize(matrixStates.length));
+			this.setDimLength(this.determineCubeSize(matrixStates.length));
+			this.createRubiksCube(this.getDimLength());
 			for (int i = 0; i < matrixStates.length; i++) {
 				String[] tvals = matrixStates[i].split(STATE_TVAL_SEPARATOR);
 				for (int j = 0; j < tvals.length; j++) {
@@ -466,12 +549,52 @@ public class FoxTheGame extends ApplicationAdapter {
 		return size;
 	}
 
-	private int root(int num, int root) {
-		double res = Math.pow(Math.E, Math.log(num) / root);
-		return (int) Math.round(res);
-	}
-
 	private boolean isNullOrEmpty(String string) {
 		return string == null || string.isEmpty();
+	}
+
+	protected void setDimLength(int dimLength) {
+		this.dimLength = dimLength;
+		this.createRubiksCube(this.dimLength);
+		setDisabledAndTouchable(this.addButton, this.isAddButtonDisabled());
+		setDisabledAndTouchable(this.removeButton, this.isRemoveButtonDisabled());
+		this.undoableMoves.clear();
+		this.redoableMoves.clear();
+	}
+
+	protected int getDimLength() {
+		return this.dimLength;
+	}
+
+	protected boolean isShuffle() {
+		return shuffle;
+	}
+
+	protected void setShuffle(boolean shuffle) {
+		this.shuffle = shuffle;
+		this.evaluateButtons();
+	}
+
+	private void evaluateButtons() {
+		setDisabledAndTouchable(this.addButton, this.isAddButtonDisabled());
+		setDisabledAndTouchable(this.removeButton, this.isRemoveButtonDisabled());
+		setDisabledAndTouchable(this.undoButton, this.isUndoButtonDisabled());
+		setDisabledAndTouchable(this.redoButton, this.isRedoButtonDisabled());
+	}
+
+	private boolean isAddButtonDisabled() {
+		return this.shuffle || this.dimLength == MAX_SIZE || this.isRotating;
+	}
+
+	private boolean isRemoveButtonDisabled() {
+		return this.shuffle || this.dimLength == MIN_SIZE || this.isRotating;
+	}
+
+	private boolean isUndoButtonDisabled() {
+		return this.undoableMoves.isEmpty() || this.shuffle || this.isRotating;
+	}
+
+	private boolean isRedoButtonDisabled() {
+		return this.redoableMoves.isEmpty() || this.shuffle || this.isRotating;
 	}
 }
