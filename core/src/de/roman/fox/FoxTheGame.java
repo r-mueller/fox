@@ -12,6 +12,7 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.FileHandleResolver;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
+import com.badlogic.gdx.assets.loaders.resolvers.ResolutionFileResolver.Resolution;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.GL20;
@@ -88,13 +89,13 @@ public class FoxTheGame extends ApplicationAdapter {
 	private static final int MOVE_UNDOABLE = 100;
 	private static final int MOVE_REDOABLE = 200;
 	private Vector3 undoRedoVector = new Vector3();
-	private static final int UNDO_REDO_SIZE_LIMIT = 10;
+	private static final int UNDO_REDO_SIZE_LIMIT = 5;
 	private FileHandleResolver fileHandleResolver;
 
 	@Override
 	public void create() {
 		super.create();
-		this.fileHandleResolver = new InternalFileHandleResolver();
+		this.fileHandleResolver = new ContinuousResolutionFileResolver(new InternalFileHandleResolver(), new Resolution[]{ new Resolution(1280,854,"1MP"), new Resolution(1919,1079,"2_5MP")});
 		Gdx.app.log(LOGGER_TAG, "Creating game.");
 		this.createUI();
 		this.createEnvironment();
@@ -133,19 +134,20 @@ public class FoxTheGame extends ApplicationAdapter {
 		Table widgets = new Table();
 		Actor b = this.createShuffleButton();
 		int originY = Gdx.graphics.getHeight() - buttonHeight;
-		b.setPosition(32 + 64 - 20, originY - 64 - 10);
+		int margin = 30;
+		b.setPosition(margin, originY - b.getWidth() - margin);
 		widgets.addActor(b);
 		b = this.addButton = this.createAddXyzButton();
-		b.setPosition(64 - 20, 20);
+		b.setPosition(margin, margin);
 		widgets.addActor(b);
 		b = this.removeButton = this.createRemoveXyzButton();
-		b.setPosition(128 - 10, 20);
+		b.setPosition(b.getWidth() + margin * 2, margin);
 		widgets.addActor(b);
 		b = undoButton = this.createUndoButton();
-		b.setPosition(Gdx.graphics.getWidth() - 64 - 64 - 20 - 10, 20);
+		b.setPosition(Gdx.graphics.getWidth() - b.getWidth() * 2 - margin * 2, margin);
 		widgets.addActor(b);
 		b = redoButton = this.createRedoButton();
-		b.setPosition(Gdx.graphics.getWidth() - 64 - 20, 20);
+		b.setPosition(Gdx.graphics.getWidth() - b.getWidth() - margin, margin);
 		widgets.addActor(b);
 		this.stage.addActor(widgets);
 		setDisabledAndTouchable(undoButton, isUndoButtonDisabled());
@@ -154,8 +156,8 @@ public class FoxTheGame extends ApplicationAdapter {
 
 	private Button createUndoButton() {
 		ImageButtonStyle style = new ImageButtonStyle();
-		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("undo_disabled_64.png"))));
-		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("undo_enabled_64.png"))));
+		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("undo_disabled.png"))));
+		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("undo_enabled.png"))));
 		ImageButton undoButton = new ImageButton(style);
 		undoButton.addListener(new ClickListener() {
 			@Override
@@ -178,8 +180,8 @@ public class FoxTheGame extends ApplicationAdapter {
 
 	private Button createRedoButton() {
 		ImageButtonStyle style = new ImageButtonStyle();
-		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("redo_disabled_64.png"))));
-		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("redo_enabled_64.png"))));
+		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("redo_disabled.png"))));
+		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("redo_enabled.png"))));
 		final ImageButton redoButton = new ImageButton(style);
 		redoButton.addListener(new ClickListener() {
 			@Override
@@ -202,8 +204,8 @@ public class FoxTheGame extends ApplicationAdapter {
 
 	private Button createRemoveXyzButton() {
 		ImageButtonStyle style = new ImageButtonStyle();
-		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("remove_disabled_thick_64.png"))));
-		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("remove_enabled_thick_64.png"))));
+		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("remove_disabled_thick.png"))));
+		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("remove_enabled_thick.png"))));
 		final ImageButton removeXyzButton = new ImageButton(style);
 		removeXyzButton.addListener(new ClickListener() {
 			@Override
@@ -218,8 +220,8 @@ public class FoxTheGame extends ApplicationAdapter {
 
 	private Button createAddXyzButton() {
 		ImageButtonStyle style = new ImageButtonStyle();
-		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("add_disabled_thick_64.png"))));
-		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("add_enabled_thick_64.png"))));
+		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("add_disabled_thick.png"))));
+		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("add_enabled_thick.png"))));
 		final ImageButton addXyzButton = new ImageButton(style);
 		addXyzButton.addListener(new ClickListener() {
 			@Override
@@ -234,8 +236,7 @@ public class FoxTheGame extends ApplicationAdapter {
 
 	private Button createShuffleButton() {
 		ImageButtonStyle style = new ImageButtonStyle();
-		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("shuffle_cube_bw_64.png"))));
-		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("shuffle_cube_64.png"))));
+		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("shuffle_cube.png"))));
 		ImageButton shuffleButton = new ImageButton(style);
 		shuffleButton.addListener(new ClickListener() {
 			@Override
