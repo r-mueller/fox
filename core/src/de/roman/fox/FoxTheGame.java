@@ -272,7 +272,7 @@ public class FoxTheGame extends ApplicationAdapter {
 			public boolean zoom(float amount) {
 				float camDistanceToCenter = Math.round(this.camera.position.len());
 				Gdx.app.log(LOGGER_TAG, "" + camDistanceToCenter);
-				if ((14 <= camDistanceToCenter && amount > 0) || (camDistanceToCenter <= 18 && amount < 0)) {
+				if ((getDimLength() * 3 <= camDistanceToCenter && amount > 0) || (camDistanceToCenter <= getDimLength() * 4 && amount < 0)) {
 					return super.zoom(amount);
 				} else {
 					return false;
