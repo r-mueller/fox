@@ -1,10 +1,9 @@
 package de.roman.fox;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Deque;
 import java.util.List;
+import java.util.Stack;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
@@ -25,6 +24,7 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
@@ -44,8 +44,6 @@ public class FoxTheGame extends ApplicationAdapter {
 	private static final String LOGGER_TAG = FoxTheGame.class.getName();
 
 	public FoxTheGame() {
-		// long javaHeap = Gdx.app.getJavaHeap();
-		// long nativeHeap = Gdx.app.getNativeHeap();
 	}
 
 	private final float fieldOfView = 67;
@@ -55,21 +53,22 @@ public class FoxTheGame extends ApplicationAdapter {
 	private Environment environment;
 	private CameraInputController camInputController;
 	private List<ModelInstance> cubes = new ArrayList<ModelInstance>();
-	private List<ModelInstance> cubesToRotate = new ArrayList<ModelInstance>();
 	private Vector3 rotateWorldAxis = Vector3.Zero;
 	private Vector3 touchedTranslation = Vector3.Zero;
+	private float touchedTranslationX, touchedTranslationY, touchedTranslationZ;
 	private float totalDegreesToRotate;
 	private float degreesRotated;
 	private boolean isRotating;
 	Vector3 translation = new Vector3();
 	Quaternion rotation = new Quaternion();
-	private float length = 2;
+	private float length = 2f;
 	private AssetManager assets;
 	private Stage stage;
 	private boolean shuffle = false;
 	private static final String STATE_TVAL_SEPARATOR = ":";
 	private static final String STATE_MATRIX_SEPARATOR = "::";
 	private static final String STATE_FILE = "transformsstate.txt";
+	private static final String MODEL_FILE = "cubie_rounded_edge.g3db";
 	private String stateAsString = "";
 	private int dimLength = 3;
 	private float degreeSteps;
@@ -81,11 +80,11 @@ public class FoxTheGame extends ApplicationAdapter {
 	private Button undoButton;
 	private Sound rubixCubeTurn;
 
-	private static final int MAX_SIZE = 5;
+	private static final int MAX_SIZE = 25;
 	private static final int MIN_SIZE = 2;
 
-	private Deque<Move> undoableMoves = new ArrayDeque<Move>(10);
-	private Deque<Move> redoableMoves = new ArrayDeque<Move>(10);
+	private Stack<Move> undoableMoves = new Stack<Move>();
+	private Stack<Move> redoableMoves = new Stack<Move>();
 	private static final int MOVE_UNDOABLE = 100;
 	private static final int MOVE_REDOABLE = 200;
 	private Vector3 undoRedoVector = new Vector3();
@@ -95,17 +94,18 @@ public class FoxTheGame extends ApplicationAdapter {
 	@Override
 	public void create() {
 		super.create();
-		this.fileHandleResolver = new ContinuousResolutionFileResolver(new InternalFileHandleResolver(), new Resolution[]{ new Resolution(1280,854,"1MP"), new Resolution(1919,1079,"2_5MP")});
+		this.fileHandleResolver = new ContinuousResolutionFileResolver(new InternalFileHandleResolver(), new Resolution[] {
+				new Resolution(1280, 854, "1MP"), new Resolution(1919, 1079, "2_5MP") });
 		Gdx.app.log(LOGGER_TAG, "Creating game.");
 		this.createUI();
 		this.createEnvironment();
 		this.assets = new AssetManager();
-		this.assets.load("cubie_rounded_edge.g3db", Model.class);
+		this.assets.load(MODEL_FILE, Model.class);
 		this.assets.finishLoading();
 
 		this.rubixCubeTurn = Gdx.audio.newSound(Gdx.files.internal("rubixturn.wav"));
 
-		this.cubesModel = this.assets.get("cubie_rounded_edge.g3db", Model.class);
+		this.cubesModel = this.assets.get(MODEL_FILE, Model.class);
 		if (!this.readPersistedState()) {
 			this.createRubiksCube(this.getDimLength());
 		}
@@ -171,7 +171,7 @@ public class FoxTheGame extends ApplicationAdapter {
 	}
 
 	private void undoLastMove() {
-		Move lastMove = undoableMoves.poll();
+		Move lastMove = undoableMoves.pop();
 		if (lastMove != null) {
 			undoRedoVector.set(lastMove.getRotX(), lastMove.getRotY(), lastMove.getRotZ());
 			rotate(lastMove.getTouchedInstance(), undoRedoVector, -lastMove.getDegree(), MOVE_REDOABLE);
@@ -195,7 +195,7 @@ public class FoxTheGame extends ApplicationAdapter {
 	}
 
 	private void redoLastMove() {
-		Move lastMove = redoableMoves.poll();
+		Move lastMove = redoableMoves.pop();
 		if (lastMove != null) {
 			undoRedoVector.set(lastMove.getRotX(), lastMove.getRotY(), lastMove.getRotZ());
 			rotate(lastMove.getTouchedInstance(), undoRedoVector, -lastMove.getDegree(), MOVE_UNDOABLE);
@@ -204,7 +204,8 @@ public class FoxTheGame extends ApplicationAdapter {
 
 	private Button createRemoveXyzButton() {
 		ImageButtonStyle style = new ImageButtonStyle();
-		style.imageDisabled = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("remove_disabled_thick.png"))));
+		style.imageDisabled = new NinePatchDrawable(
+				new NinePatch(new Texture(this.fileHandleResolver.resolve("remove_disabled_thick.png"))));
 		style.imageUp = new NinePatchDrawable(new NinePatch(new Texture(this.fileHandleResolver.resolve("remove_enabled_thick.png"))));
 		final ImageButton removeXyzButton = new ImageButton(style);
 		removeXyzButton.addListener(new ClickListener() {
@@ -313,50 +314,65 @@ public class FoxTheGame extends ApplicationAdapter {
 	@Override
 	public void render() {
 		super.render();
-
 		this.camInputController.update();
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+		Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
+		Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
+		Gdx.gl.glEnable(GL20.GL_CULL_FACE);
+		Gdx.gl.glCullFace(GL20.GL_BACK);
 		Gdx.gl.glClearColor(0.2f, 0.4f, 0.8f, 1);
 
 		if (this.shuffle && !this.isRotating) {
 			this.randomlyRotate();
 		}
-		if (this.isRotating) {
-			this.degreesRotated = this.degreesRotated + degreeSteps;
-			for (ModelInstance rotated : this.cubesToRotate) {
-
-				rotation = rotated.transform.getRotation(rotation);
-				rotated.transform.rotate(-rotation.x, -rotation.y, -rotation.z, rotation.getAngle());
-
-				translation = rotated.transform.getTranslation(translation);
-
-				rotated.transform.translate(-translation.x, -translation.y, -translation.z);
-
-				rotated.transform.rotate(this.rotateWorldAxis, degreeSteps);
-
-				rotated.transform.translate(translation);
-
-				rotated.transform.rotate(rotation.x, rotation.y, rotation.z, rotation.getAngle());
-				if (this.rotationsCount == 40 && this.totalDegreesToRotate == this.degreesRotated) {
-					Gdx.app.log(LOGGER_TAG, "Round translations.");
-					for (int i = 0; i < rotated.transform.val.length; i++) {
-						rotated.transform.val[i] = Math.round(rotated.transform.val[i]);
-					}
-					this.rotationsCount = 0;
-				}
-			}
-			if (this.totalDegreesToRotate == this.degreesRotated) {
-				this.cubesToRotate.clear();
-				this.setRotating(false);
-			}
-		}
 		this.modelBatch.begin(this.camera);
-		this.modelBatch.render(this.cubes, this.environment);
+		if(this.isRotating){
+			this.degreesRotated = this.degreesRotated + degreeSteps;
+		}
+		for (ModelInstance cube : this.cubes) {
+			if (this.isRotating && this.mustRotate(cube)) {
+
+				rotation = cube.transform.getRotation(rotation);
+				cube.transform.rotate(-rotation.x, -rotation.y, -rotation.z, rotation.getAngle());
+
+				translation = cube.transform.getTranslation(translation);
+
+				cube.transform.translate(-translation.x, -translation.y, -translation.z);
+
+				cube.transform.rotate(this.rotateWorldAxis, degreeSteps);
+
+				cube.transform.translate(translation);
+
+				cube.transform.rotate(rotation.x, rotation.y, rotation.z, rotation.getAngle());
+			}
+			if (this.rotationsCount == 40 && this.totalDegreesToRotate == this.degreesRotated) {
+				Gdx.app.log(LOGGER_TAG, "Round translations.");
+				for (int i = 0; i < cube.transform.val.length; i++) {
+					cube.transform.val[i] = Math.round(cube.transform.val[i]);
+				}
+				this.rotationsCount = 0;
+			}
+			this.modelBatch.render(cube, this.environment);
+		}
+		if (this.totalDegreesToRotate == this.degreesRotated) {
+			this.setRotating(false);
+		}
 		this.modelBatch.end();
 
 		stage.act(Gdx.graphics.getDeltaTime());
 		stage.draw();
+	}
+
+	private boolean mustRotate(ModelInstance cube) {
+		if (this.rotateWorldAxis.x != 0) {
+			return Math.round(cube.transform.getTranslation(touchedTranslation).x) == Math.round(this.touchedTranslationX);
+		} else if (this.rotateWorldAxis.y != 0) {
+			return Math.round(cube.transform.getTranslation(touchedTranslation).y) == Math.round(this.touchedTranslationY);
+		} else if (this.rotateWorldAxis.z != 0) {
+			return Math.round(cube.transform.getTranslation(touchedTranslation).z) == Math.round(this.touchedTranslationZ);
+		}
+		return false;
 	}
 
 	private void randomlyRotate() {
@@ -398,19 +414,15 @@ public class FoxTheGame extends ApplicationAdapter {
 
 	protected void rotate(ModelInstance touchedInstance, Vector3 rotationVector, float degree, int moveCode) {
 		Gdx.app.log(LOGGER_TAG, "Rotate around " + rotationVector + " degrees " + degree);
+		this.touchedTranslationX = touchedInstance.transform.getTranslation(this.touchedTranslation).x;
+		this.touchedTranslationY = touchedInstance.transform.getTranslation(this.touchedTranslation).y;
+		this.touchedTranslationZ = touchedInstance.transform.getTranslation(this.touchedTranslation).z;
 		if (rotationVector.x != 0) {
 			if (this.isRotating) {
 				return;
 			}
 			this.setRotating(true);
 			Gdx.app.log(LOGGER_TAG, "Rotate around worlds X.");
-			float xTranslationOfTouched = touchedInstance.transform.getTranslation(touchedTranslation).x;
-			for (ModelInstance cube : this.cubes) {
-				if (Math.round(cube.transform.getTranslation(touchedTranslation).x) == Math.round(xTranslationOfTouched)) {
-					this.cubesToRotate.add(cube);
-				}
-
-			}
 			this.rotateWorldAxis = rotationVector;
 			this.totalDegreesToRotate = degree;
 			this.degreeSteps = this.totalDegreesToRotate / 6;
@@ -423,13 +435,6 @@ public class FoxTheGame extends ApplicationAdapter {
 			}
 			this.setRotating(true);
 			Gdx.app.log(LOGGER_TAG, "Rotate around worlds Y.");
-			float yTranslationOfTouched = touchedInstance.transform.getTranslation(touchedTranslation).y;
-			for (ModelInstance cube : this.cubes) {
-				if (Math.round(cube.transform.getTranslation(touchedTranslation).y) == Math.round(yTranslationOfTouched)) {
-					this.cubesToRotate.add(cube);
-				}
-
-			}
 			this.rotateWorldAxis = rotationVector;
 			this.totalDegreesToRotate = degree;
 			this.degreeSteps = this.totalDegreesToRotate / 6;
@@ -442,12 +447,6 @@ public class FoxTheGame extends ApplicationAdapter {
 			}
 			this.setRotating(true);
 			Gdx.app.log(LOGGER_TAG, "Rotate around worlds Z.");
-			float zTranslationOfTouched = touchedInstance.transform.getTranslation(touchedTranslation).z;
-			for (ModelInstance cube : this.cubes) {
-				if (Math.round(cube.transform.getTranslation(touchedTranslation).z) == Math.round(zTranslationOfTouched)) {
-					this.cubesToRotate.add(cube);
-				}
-			}
 			this.rotateWorldAxis = rotationVector;
 			this.totalDegreesToRotate = degree;
 			this.degreeSteps = this.totalDegreesToRotate / 6;
@@ -464,7 +463,7 @@ public class FoxTheGame extends ApplicationAdapter {
 		if (MOVE_UNDOABLE == moveCode) {
 			Move undoableMove = null;
 			if (UNDO_REDO_SIZE_LIMIT == this.undoableMoves.size()) {
-				undoableMove = this.undoableMoves.pollLast();
+				undoableMove = this.undoableMoves.remove(0);
 				undoableMove.setDegree(degree);
 				undoableMove.setRotX(rotationVector.x);
 				undoableMove.setRotY(rotationVector.y);
@@ -477,7 +476,7 @@ public class FoxTheGame extends ApplicationAdapter {
 		} else if (MOVE_REDOABLE == moveCode) {
 			Move redoableMove = null;
 			if (UNDO_REDO_SIZE_LIMIT == this.redoableMoves.size()) {
-				redoableMove = this.redoableMoves.pollLast();
+				redoableMove = this.redoableMoves.remove(0);
 				redoableMove.setDegree(degree);
 				redoableMove.setRotX(rotationVector.x);
 				redoableMove.setRotY(rotationVector.y);
@@ -556,16 +555,18 @@ public class FoxTheGame extends ApplicationAdapter {
 	}
 
 	private boolean isNullOrEmpty(String string) {
-		return string == null || string.isEmpty();
+		return string == null || string.length() == 0;
 	}
 
 	protected void setDimLength(int dimLength) {
 		this.dimLength = dimLength;
 		this.createRubiksCube(this.dimLength);
-		setDisabledAndTouchable(this.addButton, this.isAddButtonDisabled());
-		setDisabledAndTouchable(this.removeButton, this.isRemoveButtonDisabled());
 		this.undoableMoves.clear();
 		this.redoableMoves.clear();
+		this.setDisabledAndTouchable(this.addButton, this.isAddButtonDisabled());
+		this.setDisabledAndTouchable(this.removeButton, this.isRemoveButtonDisabled());
+		this.setDisabledAndTouchable(this.undoButton, this.isUndoButtonDisabled());
+		this.setDisabledAndTouchable(this.redoButton, this.isRedoButtonDisabled());
 	}
 
 	protected int getDimLength() {
