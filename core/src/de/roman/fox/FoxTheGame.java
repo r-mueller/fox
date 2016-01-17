@@ -24,7 +24,6 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
@@ -114,6 +113,7 @@ public class FoxTheGame extends ApplicationAdapter {
 	@Override
 	public void pause() {
 		super.pause();
+		this.setRotating(false);
 		this.persistState();
 		this.rubixCubeTurn.dispose();
 	}
