@@ -79,7 +79,7 @@ public class FoxTheGame extends ApplicationAdapter {
 	private Button undoButton;
 	private Sound rubixCubeTurn;
 
-	private static final int MAX_SIZE = 25;
+	private static final int MAX_SIZE = 5;
 	private static final int MIN_SIZE = 2;
 
 	private Stack<Move> undoableMoves = new Stack<Move>();
@@ -113,9 +113,27 @@ public class FoxTheGame extends ApplicationAdapter {
 	@Override
 	public void pause() {
 		super.pause();
+		if (this.isRotating) {
+			float finalRotation = this.totalDegreesToRotate - this.degreesRotated;
+			for (ModelInstance cube : this.cubes) {
+				if (this.mustRotate(cube)) {
+					rotation = cube.transform.getRotation(rotation);
+					cube.transform.rotate(-rotation.x, -rotation.y, -rotation.z, rotation.getAngle());
+
+					translation = cube.transform.getTranslation(translation);
+
+					cube.transform.translate(-translation.x, -translation.y, -translation.z);
+
+					cube.transform.rotate(this.rotateWorldAxis, finalRotation);
+
+					cube.transform.translate(translation);
+
+					cube.transform.rotate(rotation.x, rotation.y, rotation.z, rotation.getAngle());
+				}
+			}
+		}
 		this.setRotating(false);
 		this.persistState();
-		this.rubixCubeTurn.dispose();
 	}
 
 	@Override
@@ -327,7 +345,7 @@ public class FoxTheGame extends ApplicationAdapter {
 			this.randomlyRotate();
 		}
 		this.modelBatch.begin(this.camera);
-		if(this.isRotating){
+		if (this.isRotating) {
 			this.degreesRotated = this.degreesRotated + degreeSteps;
 		}
 		for (ModelInstance cube : this.cubes) {
@@ -390,6 +408,9 @@ public class FoxTheGame extends ApplicationAdapter {
 	public void dispose() {
 		super.dispose();
 		this.cubesModel.dispose();
+		this.rubixCubeTurn.dispose();
+		this.modelBatch.dispose();
+		this.stage.dispose();
 	}
 
 	public PerspectiveCamera getCamera() {
