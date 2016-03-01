@@ -291,7 +291,7 @@ public class FoxTheGame extends ApplicationAdapter {
 			public boolean zoom(float amount) {
 				float camDistanceToCenter = Math.round(this.camera.position.len());
 				Gdx.app.log(LOGGER_TAG, "" + camDistanceToCenter);
-				if ((getDimLength() * 3 <= camDistanceToCenter && amount > 0) || (camDistanceToCenter <= getDimLength() * 4 && amount < 0)) {
+				if ((getDimLength() * 3.5 <= camDistanceToCenter && amount > 0) || (camDistanceToCenter <= getDimLength() * 4 && amount < 0)) {
 					return super.zoom(amount);
 				} else {
 					return false;
@@ -303,6 +303,9 @@ public class FoxTheGame extends ApplicationAdapter {
 
 	private void createRubiksCube(int size) {
 		this.cubes.clear();
+		float xyzPos = this.determineCameraDistanceVectorUnit(size * 4 - 2);
+		this.camera.position.set(xyzPos, xyzPos, xyzPos);
+		this.camera.update();
 		float lower = -(size / 2f) + 0.5f;
 		float upper = -lower;
 		for (float x = lower, xs = 0; xs < size; x++, xs++) {
@@ -316,6 +319,10 @@ public class FoxTheGame extends ApplicationAdapter {
 				}
 			}
 		}
+	}
+	
+	private float determineCameraDistanceVectorUnit(float distance){
+		return (float) Math.sqrt( distance * distance / 3);
 	}
 
 	private void setDisabledAndTouchable(Button button, boolean disabledAndTouchable) {
