@@ -371,12 +371,11 @@ public class FoxTheGame extends ApplicationAdapter {
 
 				cube.transform.rotate(rotation.x, rotation.y, rotation.z, rotation.getAngle());
 			}
-			if (this.rotationsCount == 40 && this.totalDegreesToRotate == this.degreesRotated) {
+			if (this.rotationsCount == 20 && this.totalDegreesToRotate == this.degreesRotated) {
 				Gdx.app.log(LOGGER_TAG, "Round translations.");
 				for (int i = 0; i < cube.transform.val.length; i++) {
 					cube.transform.val[i] = Math.round(cube.transform.val[i]);
 				}
-				this.rotationsCount = 0;
 			}
 			this.modelBatch.render(cube, this.environment);
 		}
@@ -445,6 +444,7 @@ public class FoxTheGame extends ApplicationAdapter {
 		this.touchedTranslationX = touchedInstance.transform.getTranslation(this.touchedTranslation).x;
 		this.touchedTranslationY = touchedInstance.transform.getTranslation(this.touchedTranslation).y;
 		this.touchedTranslationZ = touchedInstance.transform.getTranslation(this.touchedTranslation).z;
+		this.rotationsCount = (short) (rotationsCount == 40 ? 0 : rotationsCount+1);
 		if (rotationVector.x != 0) {
 			if (this.isRotating) {
 				return;
@@ -455,7 +455,6 @@ public class FoxTheGame extends ApplicationAdapter {
 			this.totalDegreesToRotate = degree;
 			this.degreeSteps = this.totalDegreesToRotate / 6;
 			this.degreesRotated = 0;
-			this.rotationsCount++;
 			pushUndoRedoMove(touchedInstance, rotationVector, degree, moveCode);
 		} else if (rotationVector.y != 0) {
 			if (this.isRotating) {
@@ -467,7 +466,6 @@ public class FoxTheGame extends ApplicationAdapter {
 			this.totalDegreesToRotate = degree;
 			this.degreeSteps = this.totalDegreesToRotate / 6;
 			this.degreesRotated = 0;
-			this.rotationsCount++;
 			pushUndoRedoMove(touchedInstance, rotationVector, degree, moveCode);
 		} else if (rotationVector.z != 0) {
 			if (this.isRotating) {
@@ -479,7 +477,6 @@ public class FoxTheGame extends ApplicationAdapter {
 			this.totalDegreesToRotate = degree;
 			this.degreeSteps = this.totalDegreesToRotate / 6;
 			this.degreesRotated = 0;
-			this.rotationsCount++;
 			pushUndoRedoMove(touchedInstance, rotationVector, degree, moveCode);
 		}
 		if (this.isRotating) {
