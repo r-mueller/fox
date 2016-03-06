@@ -153,13 +153,14 @@ public class FoxTheGame extends ApplicationAdapter {
 		Actor b = this.createShuffleButton();
 		int originY = Gdx.graphics.getHeight() - buttonHeight;
 		int margin = 30;
-		b.setPosition(margin, originY - b.getWidth() - margin);
+		float topRow = originY - b.getWidth() - margin;
+		b.setPosition(margin, topRow);
 		widgets.addActor(b);
 		b = this.addButton = this.createAddXyzButton();
-		b.setPosition(margin, margin);
+		b.setPosition(Gdx.graphics.getWidth() - b.getWidth() * 2 - margin * 2, topRow);
 		widgets.addActor(b);
 		b = this.removeButton = this.createRemoveXyzButton();
-		b.setPosition(b.getWidth() + margin * 2, margin);
+		b.setPosition(Gdx.graphics.getWidth() - b.getWidth() - margin, topRow);
 		widgets.addActor(b);
 		b = undoButton = this.createUndoButton();
 		b.setPosition(Gdx.graphics.getWidth() - b.getWidth() * 2 - margin * 2, margin);
