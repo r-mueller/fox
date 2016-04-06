@@ -9,11 +9,11 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.math.collision.Ray;
 
-class DoublePickInputListener extends InputAdapter {
+class TouchInputListener extends InputAdapter {
 
-	private static final String LOGGER_TAG = DoublePickInputListener.class.getName();
+	private static final String LOGGER_TAG = TouchInputListener.class.getName();
 
-	DoublePickInputListener(FoxTheGame game) {
+	TouchInputListener(FoxTheGame game) {
 		this.game = game;
 	}
 

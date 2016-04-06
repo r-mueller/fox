@@ -5,9 +5,10 @@ import com.badlogic.gdx.assets.loaders.FileHandleResolver;
 import com.badlogic.gdx.assets.loaders.resolvers.ResolutionFileResolver;
 import com.badlogic.gdx.files.FileHandle;
 
-public class ContinuousResolutionFileResolver extends ResolutionFileResolver {
 
-	public ContinuousResolutionFileResolver(FileHandleResolver baseResolver, Resolution[] descriptors) {
+public class HighestResolutionFileResolver extends ResolutionFileResolver {
+
+	public HighestResolutionFileResolver(FileHandleResolver baseResolver, Resolution[] descriptors) {
 		super(baseResolver, descriptors);
 	}
 

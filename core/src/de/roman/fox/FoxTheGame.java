@@ -93,7 +93,7 @@ public class FoxTheGame extends ApplicationAdapter {
 	@Override
 	public void create() {
 		super.create();
-		this.fileHandleResolver = new ContinuousResolutionFileResolver(new InternalFileHandleResolver(), new Resolution[] {
+		this.fileHandleResolver = new HighestResolutionFileResolver(new InternalFileHandleResolver(), new Resolution[] {
 				new Resolution(1280, 854, "1MP"), new Resolution(1919, 1079, "2_5MP") });
 		Gdx.app.log(LOGGER_TAG, "Creating game.");
 		this.createUI();
@@ -299,7 +299,7 @@ public class FoxTheGame extends ApplicationAdapter {
 				}
 			}
 		};
-		Gdx.input.setInputProcessor(new InputMultiplexer(this.stage, new DoublePickInputListener(this), this.camInputController));
+		Gdx.input.setInputProcessor(new InputMultiplexer(this.stage, new TouchInputListener(this), this.camInputController));
 	}
 
 	private void createRubiksCube(int size) {
